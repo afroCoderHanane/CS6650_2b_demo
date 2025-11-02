@@ -2,3 +2,8 @@
 **.tfstate
 **.tfstate.*
 **/.terraform/
+
+go.mod
+
+__pycache__/
+

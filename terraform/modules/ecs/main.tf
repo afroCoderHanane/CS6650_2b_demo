@@ -48,3 +48,26 @@ resource "aws_ecs_service" "this" {
     assign_public_ip = true
   }
 }
+
+environment = [
+  {
+    name  = "DB_HOST"
+    value = var.db_host
+  },
+  {
+    name  = "DB_PORT"
+    value = tostring(var.db_port)
+  },
+  {
+    name  = "DB_NAME"
+    value = var.db_name
+  },
+  {
+    name  = "DB_USER"
+    value = var.db_user
+  },
+  {
+    name  = "DB_PASSWORD"
+    value = var.db_password
+  }
+]

@@ -34,6 +34,11 @@ module "ecs" {
   log_group_name     = module.logging.log_group_name
   ecs_count          = var.ecs_count
   region             = var.aws_region
+  db_host     = module.rds.db_instance_address
+  db_port     = module.rds.db_instance_port
+  db_name     = module.rds.db_name
+  db_user     = var.db_username
+  db_password = var.db_password
 }
 
 
@@ -48,6 +53,19 @@ resource "docker_image" "app" {
     # Dockerfile defaults to "Dockerfile" in that context
     platform = "linux/amd64"
   }
+}
+
+module "rds" {
+  source = "./modules/rds"
+
+  project_name           = var.project_name
+  vpc_id                 = module.network.vpc_id
+  private_subnet_ids     = module.network.private_subnet_ids
+  ecs_security_group_id  = module.ecs.ecs_security_group_id
+
+  database_name     = var.db_name
+  database_username = var.db_username
+  database_password = var.db_password
 }
 
 resource "docker_registry_image" "app" {

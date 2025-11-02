@@ -57,3 +57,14 @@ output "security_group_id" {
   description = "Security group ID for ECS tasks"
   value       = module.network.security_group_id
 }
+
+# Monitoring Outputs
+output "dashboard_url" {
+  description = "CloudWatch Dashboard URL"
+  value       = module.monitoring.dashboard_url
+}
+
+output "alb_arn" {
+  description = "ALB ARN for monitoring"
+  value       = module.alb.alb_arn
+}

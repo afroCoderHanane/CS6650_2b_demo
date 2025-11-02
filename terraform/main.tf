@@ -72,6 +72,19 @@ module "ecs" {
   depends_on = [module.rds, module.alb]
 }
 
+module "monitoring" {
+  source = "./modules/monitoring"
+
+  service_name       = var.service_name
+  region             = var.aws_region
+  cluster_name       = module.ecs.cluster_name
+  db_instance_id     = lower("${var.service_name}-mysql")
+  alb_name           = split("/", module.alb.alb_arn)[1]
+  target_group_name  = split("/", module.alb.target_group_arn)[1]
+
+  depends_on = [module.rds, module.ecs, module.alb]
+}
+
 # Build & push the Go app image into ECR
 resource "docker_image" "app" {
   name = "${module.ecr.repository_url}:latest"

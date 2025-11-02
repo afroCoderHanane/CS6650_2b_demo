@@ -1,0 +1,29 @@
+============================================
+CloudWatch Metrics - Shopping Cart System
+============================================
+Time: Sun Nov  2 05:02:18 PST 2025
+
+\033[0;34mRDS Metrics:\033[0m
+----------------------------------------
+CPU Utilization:        3.88%
+Database Connections:   2
+Read Latency:           0.0001 sec (0.14 ms)
+Write Latency:          0.0005 sec (0.49 ms)
+Read IOPS:              0.26
+Write IOPS:             0.40
+
+\033[0;34mECS Metrics:\033[0m
+----------------------------------------
+CPU Utilization:        0.45%
+Memory Utilization:     0.78%
+
+\033[0;34mALB Metrics:\033[0m
+----------------------------------------
+Response Time (avg):    0.0010 sec (1.04 ms)
+Request Count (5min):   0
+5XX Errors (5min):      0
+
+============================================
+
+\033[1;33mTo monitor continuously:\033[0m
+  watch -n 5 ./view_metrics.sh

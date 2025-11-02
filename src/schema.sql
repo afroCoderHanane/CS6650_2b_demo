@@ -1,22 +1,9 @@
 -- ============================================
 -- E-commerce Shopping Cart Database Schema
 -- ============================================
--- Design Decisions:
--- 1. Separate carts and cart_items tables for normalization
--- 2. Denormalize customer info in carts table for faster cart retrieval
--- 3. Composite index on (cart_id, product_id) for efficient item lookups
--- 4. Indexes on customer_id and created_at for history queries
--- ============================================
 
-CREATE DATABASE IF NOT EXISTS productdb;
-USE productdb;
-
--- Products table (existing from your current implementation)
-DROP TABLE IF EXISTS cart_items;
-DROP TABLE IF EXISTS carts;
-DROP TABLE IF EXISTS products;
-
-CREATE TABLE products (
+-- Products table
+CREATE TABLE IF NOT EXISTS products (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     description TEXT,
@@ -27,17 +14,15 @@ CREATE TABLE products (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     
-    -- Constraints
     CONSTRAINT chk_price CHECK (price >= 0),
     CONSTRAINT chk_stock CHECK (stock >= 0),
     
-    -- Indexes
     INDEX idx_category (category),
     INDEX idx_name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Shopping Carts table
-CREATE TABLE carts (
+CREATE TABLE IF NOT EXISTS carts (
     id INT AUTO_INCREMENT PRIMARY KEY,
     customer_id INT NOT NULL,
     customer_name VARCHAR(255) NOT NULL,
@@ -47,15 +32,14 @@ CREATE TABLE carts (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     
-    -- Indexes for efficient queries
     INDEX idx_customer_id (customer_id),
     INDEX idx_status (status),
     INDEX idx_created_at (created_at),
     INDEX idx_customer_status (customer_id, status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Cart Items table (junction table)
-CREATE TABLE cart_items (
+-- Cart Items table
+CREATE TABLE IF NOT EXISTS cart_items (
     id INT AUTO_INCREMENT PRIMARY KEY,
     cart_id INT NOT NULL,
     product_id INT NOT NULL,
@@ -64,7 +48,6 @@ CREATE TABLE cart_items (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     
-    -- Foreign keys for referential integrity
     CONSTRAINT fk_cart_items_cart 
         FOREIGN KEY (cart_id) REFERENCES carts(id) 
         ON DELETE CASCADE,
@@ -72,22 +55,19 @@ CREATE TABLE cart_items (
         FOREIGN KEY (product_id) REFERENCES products(id) 
         ON DELETE RESTRICT,
     
-    -- Constraints
     CONSTRAINT chk_quantity CHECK (quantity > 0),
     CONSTRAINT chk_price_at_addition CHECK (price_at_addition >= 0),
     
-    -- Prevent duplicate product entries in same cart
     UNIQUE KEY uk_cart_product (cart_id, product_id),
     
-    -- Composite index for efficient cart item lookups
     INDEX idx_cart_id (cart_id),
     INDEX idx_product_id (product_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Seed initial products for testing
-INSERT INTO products (name, description, price, stock, category) VALUES
-('Laptop', 'High-performance laptop', 999.99, 10, 'Electronics'),
-('Mouse', 'Wireless mouse', 29.99, 50, 'Electronics'),
-('Keyboard', 'Mechanical keyboard', 79.99, 30, 'Electronics'),
-('Monitor', '27-inch 4K monitor', 399.99, 15, 'Electronics'),
-('Headphones', 'Noise-cancelling headphones', 199.99, 25, 'Electronics');
+-- Seed initial products (insert only if not exists)
+INSERT IGNORE INTO products (id, name, description, price, stock, category) VALUES
+(1, 'Laptop', 'High-performance laptop', 999.99, 10, 'Electronics'),
+(2, 'Mouse', 'Wireless mouse', 29.99, 50, 'Electronics'),
+(3, 'Keyboard', 'Mechanical keyboard', 79.99, 30, 'Electronics'),
+(4, 'Monitor', '27-inch 4K monitor', 399.99, 15, 'Electronics'),
+(5, 'Headphones', 'Noise-cancelling headphones', 199.99, 25, 'Electronics');

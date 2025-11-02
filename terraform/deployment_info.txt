@@ -1,0 +1,14 @@
+Deployment Information
+======================
+Deployment Date: Sun Nov  2 04:27:08 PST 2025
+Application URL: http://CS6650L2-alb-601573419.us-west-2.elb.amazonaws.com
+ECS Cluster: CS6650L2-cluster
+ECS Service: CS6650L2-service
+RDS Endpoint: cs6650l2-mysql.c1m2e8sqkln3.us-west-2.rds.amazonaws.com
+Log Group: /ecs/CS6650L2
+Region: us-west-2
+
+Quick Commands:
+===============
+Test: curl http://CS6650L2-alb-601573419.us-west-2.elb.amazonaws.com/health
+Logs: aws logs tail /ecs/CS6650L2 --follow --region us-west-2

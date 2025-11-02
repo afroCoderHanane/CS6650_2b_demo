@@ -1,0 +1,26 @@
+MySQL Shopping Cart Performance Test
+=====================================
+Test Date: Sun Nov  2 04:32:16 PST 2025
+Test Duration: 2m
+Concurrent Users: 100
+Target Host: http://CS6650L2-alb-601573419.us-west-2.elb.amazonaws.com
+
+Results:
+--------
+Total Operations: 150
+- create_cart: 50 / 50
+- add_items: 50 / 50
+- get_cart: 50 / 50
+
+Performance:
+-----------
+GET cart average: 76.4458ms
+Target: <50ms
+
+Files Generated:
+---------------
+- mysql_test_results.json (for Week 6c comparison)
+- performance_report.html (interactive charts)
+- locust_report.html (detailed Locust report)
+- locust_results_stats.csv (statistics)
+- locust_results_failures.csv (failures log)

@@ -1,6 +1,13 @@
 # RDS MySQL Instance for Product and Shopping Cart Data
+
+# Get the default VPC
+data "aws_vpc" "default" {
+  default = true
+}
+
+# DB Subnet Group using provided subnet IDs
 resource "aws_db_subnet_group" "main" {
-  name       = "${var.project_name}-db-subnet-group"
+  name       = lower("${var.project_name}-db-subnet-group")
   subnet_ids = var.private_subnet_ids
 
   tags = {
@@ -8,10 +15,11 @@ resource "aws_db_subnet_group" "main" {
   }
 }
 
+# Security Group for RDS
 resource "aws_security_group" "rds" {
   name        = "${var.project_name}-rds-sg"
   description = "Security group for RDS MySQL instance"
-  vpc_id      = var.vpc_id
+  vpc_id      = data.aws_vpc.default.id
 
   # Allow MySQL access from ECS tasks only
   ingress {
@@ -35,8 +43,9 @@ resource "aws_security_group" "rds" {
   }
 }
 
+# RDS MySQL Instance
 resource "aws_db_instance" "mysql" {
-  identifier     = "${var.project_name}-mysql"
+  identifier     = lower("${var.project_name}-mysql")
   engine         = "mysql"
   engine_version = "8.0"
   instance_class = "db.t3.micro"
@@ -59,6 +68,9 @@ resource "aws_db_instance" "mysql" {
   deletion_protection       = false
   backup_retention_period   = 0
   enabled_cloudwatch_logs_exports = ["error", "slowquery"]
+
+  # Wait for network resources
+  depends_on = [aws_db_subnet_group.main]
 
   tags = {
     Name = "${var.project_name}-mysql"

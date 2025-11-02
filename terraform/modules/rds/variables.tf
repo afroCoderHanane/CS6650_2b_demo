@@ -3,13 +3,8 @@ variable "project_name" {
   type        = string
 }
 
-variable "vpc_id" {
-  description = "VPC ID where RDS will be deployed"
-  type        = string
-}
-
 variable "private_subnet_ids" {
-  description = "List of private subnet IDs for RDS subnet group"
+  description = "List of subnet IDs for RDS subnet group (will use default VPC subnets)"
   type        = list(string)
 }
 

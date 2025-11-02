@@ -10,12 +10,13 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
 
 	"github.com/gorilla/mux"
-	
+
 	// Use "store" as the base (from go.mod)
 	"store/database"
 	"store/models"
@@ -460,6 +461,73 @@ func getEnv(key, fallback string) string {
 	return fallback
 }
 
+
+// ApplySchema applies the database schema from schema.sql
+func ApplySchema(db *database.DB) error {
+	schema, err := os.ReadFile("schema.sql")
+	if err != nil {
+		return fmt.Errorf("failed to read schema: %w", err)
+	}
+
+	log.Printf("Schema file size: %d bytes", len(schema))
+	
+	// Remove all comment lines first
+	lines := strings.Split(string(schema), "\n")
+	var cleanedLines []string
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		// Skip empty lines and comment lines
+		if line != "" && !strings.HasPrefix(line, "--") {
+			cleanedLines = append(cleanedLines, line)
+		}
+	}
+	
+	cleanedSchema := strings.Join(cleanedLines, " ")
+	
+	// Split into individual statements
+	statements := strings.Split(cleanedSchema, ";")
+	log.Printf("Total statements after split: %d", len(statements))
+	
+	executedCount := 0
+	
+	for i, stmt := range statements {
+		stmt = strings.TrimSpace(stmt)
+		
+		// Skip empty statements
+		if stmt == "" {
+			continue
+		}
+		
+		log.Printf("Executing statement %d (first 80 chars): %s...", i+1, stmt[:min(len(stmt), 80)])
+		
+		// Execute the statement
+		_, err = db.Exec(stmt)
+		if err != nil {
+			// Ignore "already exists" errors
+			if strings.Contains(err.Error(), "already exists") {
+				log.Printf("Table already exists, skipping...")
+				continue
+			}
+			log.Printf("ERROR executing statement: %v", err)
+			log.Printf("Failed statement (first 200 chars): %s...", stmt[:min(len(stmt), 200)])
+			return fmt.Errorf("failed to execute statement: %w", err)
+		}
+		executedCount++
+		log.Printf("✓ Statement %d executed successfully", i+1)
+	}
+	
+	log.Printf("✓ Database schema applied successfully (%d statements executed)", executedCount)
+	return nil
+}
+
+// Helper function
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
 func main() {
 	// Load database configuration from environment
 	dbConfig := database.Config{
@@ -475,6 +543,12 @@ func main() {
 	db, err := database.NewDB(dbConfig)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	// Apply database schema
+	log.Println("Applying database schema...")
+	if err := ApplySchema(db); err != nil {
+		log.Printf("Warning: Schema application: %v", err)
+		log.Println("Continuing anyway - tables might already exist")
 	}
 	defer db.Close()
 
@@ -499,6 +573,28 @@ func main() {
 	
 	// Customer cart history endpoint
 	router.HandleFunc("/customers/{customerId:[0-9]+}/carts", server.HandleGetCustomerCarts).Methods("GET")
+
+	// Debug endpoint to check tables
+	router.HandleFunc("/debug/tables", func(w http.ResponseWriter, r *http.Request) {
+		rows, err := db.Query("SHOW TABLES")
+		if err != nil {
+			w.Write([]byte(fmt.Sprintf("Error: %v", err)))
+			return
+		}
+		defer rows.Close()
+		
+		var tables []string
+		for rows.Next() {
+			var table string
+			rows.Scan(&table)
+			tables = append(tables, table)
+		}
+		
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"tables": tables,
+			"count": len(tables),
+		})
+	}).Methods("GET")
 
 	// Health check endpoint
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {

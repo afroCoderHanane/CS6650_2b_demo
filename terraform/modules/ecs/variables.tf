@@ -86,3 +86,13 @@ variable "db_password" {
   type        = string
   sensitive   = true
 }
+
+variable "target_group_arn" {
+  description = "ARN of the ALB target group"
+  type        = string
+}
+
+variable "alb_listener_arn" {
+  description = "ARN of the ALB listener (for depends_on)"
+  type        = string
+}
